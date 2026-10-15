@@ -27,7 +27,7 @@ internal class ReplicateToLocalDirectoryService : BackgroundService
             [
                 _args.OriginDirectory.ToString(),
                 _args.DestinationDirectory.ToString(),
-                _args.Interval.ToString(),
+                _args.IntervalSeconds.ToString(),
                 _args.DestinationDirectory.ToString()
             ]));
     }

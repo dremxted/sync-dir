@@ -3,5 +3,5 @@
 public sealed record ReplicateToLocalDirectoryArgumentNames(
     string OriginDirectory,
     string ReplicaDirectory,
-    string IntervalMs,
+    string IntervalSeconds,
     string LogOutput);

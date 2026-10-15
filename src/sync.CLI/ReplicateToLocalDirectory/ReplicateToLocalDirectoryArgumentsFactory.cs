@@ -47,14 +47,10 @@ public class ReplicateToLocalDirectoryArgumentsFactory
 
     private Argument CreateSynchronizationIntervalArgument()
     {
-        Argument<TimeSpan> argument = new(_argumentNames.IntervalMs)
+        Argument<double> argument = new(_argumentNames.IntervalSeconds)
         {
             Description = "How often synchronization occurs in miliseconds."
         };
-
-        argument
-            .PositiveNumbersOnly()
-            .SetMaxValue(TimeSpan.MaxValue);
 
         return argument;
     }

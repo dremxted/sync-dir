@@ -27,7 +27,7 @@ public class ReplicateToLocalDirectoryActionHandler
         ReplicateToLocalDirectoryArgs args = new(
             parseResult.GetValue<DirectoryInfo>(_argumentNames.OriginDirectory)!,
             parseResult.GetValue<DirectoryInfo>(_argumentNames.ReplicaDirectory)!,
-            parseResult.GetValue<TimeSpan>(_argumentNames.IntervalMs)!,
+            parseResult.GetValue<double>(_argumentNames.IntervalSeconds)!,
             parseResult.GetValue<FileInfo>(_argumentNames.LogOutput)!);
 
         builder.Services

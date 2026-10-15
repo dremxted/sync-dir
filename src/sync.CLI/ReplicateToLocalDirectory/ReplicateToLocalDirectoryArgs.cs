@@ -3,5 +3,5 @@
 internal record ReplicateToLocalDirectoryArgs(
     DirectoryInfo OriginDirectory, 
     DirectoryInfo DestinationDirectory,
-    TimeSpan Interval,
+    double IntervalSeconds,
     FileInfo LogOutput);
