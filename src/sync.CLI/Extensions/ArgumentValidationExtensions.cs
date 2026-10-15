@@ -4,37 +4,30 @@ namespace sync.CLI.Extensions;
 
 internal static class ArgumentValidationExtensions
 {
-    public static Argument<TimeSpan> PositiveNumbersOnly(this Argument<TimeSpan> argument)
+    public static Argument<TNumber> InRange<TNumber>(
+        this Argument<TNumber> argument,
+        TNumber minValue,
+        TNumber maxValue)
+        where TNumber : IComparable<TNumber>
     {
         argument.Validators.Add(argumentResult =>
         {
-            TimeSpan interval = argumentResult
-                .GetValueOrDefault<TimeSpan>();
+            TNumber? argumentValue = argumentResult
+                .GetValue(argument);
 
-            if(interval < TimeSpan.Zero)
+            if(argumentValue is null)
+            {
+                return;
+            }
+
+            if(argumentValue.CompareTo(minValue) < 0
+                || argumentValue.CompareTo(maxValue) > 0)
             {
                 argumentResult
-                    .AddError("Synchronization interval must be greater than zero.");
+                    .AddError($"{argument.Name} must be within the inclusive range from {minValue} to {maxValue}.");
             }
         });
-
-        return argument;
-    }
-
-    public static Argument<TimeSpan> SetMaxValue(this Argument<TimeSpan> argument, TimeSpan maxValue)
-    {
-        argument.Validators.Add(argumentResult =>
-        {
-            TimeSpan interval = argumentResult
-                .GetValueOrDefault<TimeSpan>();
-
-            if(interval > maxValue)
-            {
-                argumentResult
-                    .AddError($"Synchronization interval must be less than {maxValue}.");
-            }
-        });
-
+        
         return argument;
     }
 }
