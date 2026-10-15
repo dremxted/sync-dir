@@ -1,7 +1,7 @@
 ﻿namespace sync.CLI.ReplicateToLocalDirectory;
 
 internal record ReplicateToLocalDirectoryArgs(
-    DirectoryInfo OriginDirectory, 
-    DirectoryInfo DestinationDirectory,
+    string OriginDirectoryPath, 
+    string DestinationDirectoryPath,
     double IntervalSeconds,
-    FileInfo LogOutput);
+    string LogOutputFilePath);

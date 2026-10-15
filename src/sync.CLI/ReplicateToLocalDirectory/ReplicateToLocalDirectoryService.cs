@@ -22,13 +22,13 @@ internal class ReplicateToLocalDirectoryService : BackgroundService
         // [TODO] Send Replicate Command
 
         _logger.LogInformation(
-            "Arguments: {args}", 
-            string.Join(",",
+            "Arguments: \n{args}", 
+            string.Join(",\n",
             [
-                _args.OriginDirectory.ToString(),
-                _args.DestinationDirectory.ToString(),
-                _args.IntervalSeconds.ToString(),
-                _args.DestinationDirectory.ToString()
+                _args.OriginDirectoryPath,
+                _args.DestinationDirectoryPath,
+                _args.IntervalSeconds,
+                _args.LogOutputFilePath
             ]));
     }
 }

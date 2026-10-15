@@ -25,10 +25,10 @@ public class ReplicateToLocalDirectoryActionHandler
             .CreateApplicationBuilder();
 
         ReplicateToLocalDirectoryArgs args = new(
-            parseResult.GetValue<DirectoryInfo>(_argumentNames.OriginDirectory)!,
-            parseResult.GetValue<DirectoryInfo>(_argumentNames.ReplicaDirectory)!,
+            parseResult.GetValue<DirectoryInfo>(_argumentNames.OriginDirectory)!.FullName,
+            parseResult.GetValue<DirectoryInfo>(_argumentNames.ReplicaDirectory)!.FullName,
             parseResult.GetValue<double>(_argumentNames.IntervalSeconds)!,
-            parseResult.GetValue<FileInfo>(_argumentNames.LogOutput)!);
+            parseResult.GetValue<FileInfo>(_argumentNames.LogOutput)!.FullName);
 
         builder.Services
             .AddHostedService<ReplicateToLocalDirectoryService>()
