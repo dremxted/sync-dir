@@ -52,6 +52,8 @@ public class ReplicateToLocalDirectoryArgumentsFactory
             Description = "How often synchronization occurs in miliseconds."
         };
 
+        argument.InRange(80, 80);
+
         return argument;
     }
 
