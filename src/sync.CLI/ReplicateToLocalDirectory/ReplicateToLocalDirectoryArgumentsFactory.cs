@@ -52,12 +52,13 @@ public class ReplicateToLocalDirectoryArgumentsFactory
             Description = "How often synchronization occurs in miliseconds."
         };
 
-        argument.InRange(80, 80);
+        // [TODO] Obtain values from JSON
+        argument.InRange(1, 60);
 
         return argument;
     }
 
-        private Argument CreateLogFileArgument()
+    private Argument CreateLogFileArgument()
     {
         Argument<FileInfo> argument = new(_argumentNames.LogOutput)
         {
