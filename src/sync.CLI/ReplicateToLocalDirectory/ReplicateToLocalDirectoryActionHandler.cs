@@ -31,6 +31,7 @@ public class ReplicateToLocalDirectoryActionHandler
             parseResult.GetValue<FileInfo>(_argumentNames.LogOutput)!.FullName);
 
         builder.Services
+            .AddMediator()
             .AddHostedService<ReplicateToLocalDirectoryService>()
             .AddSingleton(args);
 
