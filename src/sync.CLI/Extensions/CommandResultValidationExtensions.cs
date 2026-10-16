@@ -11,8 +11,14 @@ public static class CommandResultValidationExtensions
         string errorMessage,
         Func<TArgumentType,string> argumentStringSelector)
     {
-        TArgumentType valueArgumentType = parseResult
-            .GetValue<TArgumentType>(argumentName)!;;
+        TArgumentType? valueArgumentType = parseResult
+            .GetValue<TArgumentType>(argumentName);
+
+        if(valueArgumentType is null)
+        {
+            parseResult.AddError($"{argumentName} argument cannot be null.");
+            return;
+        }
 
         if(argumentStringSelector(valueArgumentType)
             .StartsWith(prefix))
