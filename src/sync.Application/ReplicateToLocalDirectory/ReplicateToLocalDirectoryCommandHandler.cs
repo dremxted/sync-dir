@@ -1,5 +1,6 @@
 ﻿using Mediator;
 using Shared.Results;
+using sync.Application.ReplicationProvider;
 
 namespace sync.Application.ReplicateToLocalDirectory;
 
@@ -33,7 +34,7 @@ public sealed class ReplicateToLocalDirectoryCommandHandler
         if(directoriesLooped)
         {
             return ResultFactory
-                .Failure(DirectoryErrors.ReplicationLoop(
+                .Failure(ReplicationErrors.ReplicationLoop(
                     originDirectoryPath: replicaDirectoryPath,
                     replicaDirectoryPath: replicaDirectoryPath)); 
         }

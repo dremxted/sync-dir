@@ -1,6 +1,6 @@
 ﻿using Shared.Results;
 
-namespace sync.Application.ReplicateToLocalDirectory;
+namespace sync.Application.ReplicationProvider;
 
 public record DirectoryReplicationLoopError : Error
 {
