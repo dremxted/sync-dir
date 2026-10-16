@@ -26,7 +26,7 @@ internal class ReplicateToLocalDirectoryService : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
         // Arrange
-        OriginDirectoryPath originDirectoryPath = new(_args.DestinationDirectoryPath);
+        OriginDirectoryPath originDirectoryPath = new(_args.OriginDirectoryPath);
         ReplicaDirectoryPath replicaDirectoryPath = new(_args.DestinationDirectoryPath);
 
         //Act
