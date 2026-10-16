@@ -20,9 +20,9 @@ public class ReplicateToLocalDirectoryCommand : RootCommand
 
         Validators.Add(parseResult => parseResult
             .PreventArgumentStartWith<DirectoryInfo>(
-                argumentName: argumentNames.OriginDirectory,
+                argumentName: argumentNames.ReplicaDirectory,
                 prefix: parseResult.GetValue<DirectoryInfo>(
-                    argumentNames.ReplicaDirectory)!.FullName,
+                    argumentNames.OriginDirectory)!.FullName,
                 errorMessage: "Cannot replicate directory to itself or child directories.",
                 argumentStringSelector: directoryInfo => directoryInfo.FullName));
 
