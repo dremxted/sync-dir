@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\sync.Application\sync.Application.csproj" />
+    <ProjectReference Include="..\sync.Infrastructure\sync.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
