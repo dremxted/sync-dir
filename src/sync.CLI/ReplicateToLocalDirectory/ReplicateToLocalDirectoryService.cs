@@ -30,11 +30,10 @@ internal class ReplicateToLocalDirectoryService : BackgroundService
         ReplicaDirectoryPath replicaDirectoryPath = new(_args.DestinationDirectoryPath);
 
         //Act
-        using PeriodicTimer periodicTimer = new(TimeSpan
-            .FromSeconds(_args.IntervalSeconds));
-
-        do
+        while(!cancellationToken.IsCancellationRequested)
         {
+            _logger.LogInformation("Replicating new files...");
+            
             Result replicateResult = await _sender.Send(new Application.ReplicateToLocalDirectory
                 .ReplicateToLocalDirectoryCommand(
                     originDirectoryPath, 
@@ -57,7 +56,8 @@ internal class ReplicateToLocalDirectoryService : BackgroundService
                         replicaDirectoryPath.Value);
             }
             
-        } while(await periodicTimer
-            .WaitForNextTickAsync(cancellationToken));
+            await Task.Delay(TimeSpan.FromSeconds(
+                _args.IntervalSeconds));
+        };
     }
 }
