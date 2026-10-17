@@ -96,6 +96,9 @@ public class LocalReplicationProvider
                     replicaStream, 
                     cancellationToken);
 
+            sourceStream.Close();
+            replicaStream.Close();
+
             replicatedFiles.Add(newFile);
         }
 
