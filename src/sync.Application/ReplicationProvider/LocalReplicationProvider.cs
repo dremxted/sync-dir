@@ -43,8 +43,7 @@ public class LocalReplicationProvider
         {
             return ResultFactory.Failure<LocalReplicationProvider>(
                 DirectoryErrors.DoesNotExist(originDirectoryPath));
-        }
-
+        };
         return ResultFactory.Success(
             new LocalReplicationProvider(
                 originDirectoryInfo, 
@@ -63,6 +62,49 @@ public class LocalReplicationProvider
     {
         List<FileInfo> replicatedFiles = new();
 
+        foreach(FileInfo newFile in EnumerateNewFiles())
+        {
+            string replicaRelativePath = Path.GetRelativePath(
+                _originDirectory.FullName,
+                newFile.FullName);
+
+            FileInfo replicaFile = new(Path
+                .Combine(_replicaDirectory.FullName, replicaRelativePath));
+
+            if(replicaFile.DirectoryName is null)
+            {
+                return ResultFactory.Failure<IReadOnlyCollection<FileInfo>>(
+                    DirectoryErrors.FileDirectoryNotFound(newFile.FullName));
+            }
+
+            Directory.CreateDirectory(replicaFile.DirectoryName);
+            
+            using FileStream sourceStream = new(
+                path: newFile.FullName,
+                mode: FileMode.Open,
+                access: FileAccess.Read,
+                share: FileShare.Read);
+
+            using FileStream replicaStream = new(
+                path: replicaFile.FullName,
+                mode: FileMode.Create,
+                access: FileAccess.Write,
+                share: FileShare.None);
+
+            await sourceStream
+                .CopyToAsync(
+                    replicaStream, 
+                    cancellationToken);
+
+            replicatedFiles.Add(newFile);
+        }
+
+        return ResultFactory.Success<IReadOnlyCollection<FileInfo>>(
+            replicatedFiles);
+    }
+
+    private IEnumerable<FileInfo> EnumerateNewFiles()
+    {
         IEnumerable<FileInfo> originFiles = _originDirectory.EnumerateFiles( 
             searchPattern: "*", 
             searchOption: SearchOption.AllDirectories);
@@ -81,35 +123,7 @@ public class LocalReplicationProvider
                 continue;
             }
 
-            if(destinationFile.DirectoryName is null)
-            {
-                return ResultFactory.Failure<IReadOnlyCollection<FileInfo>>(
-                    DirectoryErrors.FileDirectoryNotFound(destinationFile.FullName));
-            }
-
-            Directory.CreateDirectory(destinationFile.DirectoryName);
-            
-            using FileStream sourceStream = new(
-                path: file.FullName,
-                mode: FileMode.Open,
-                access: FileAccess.Read,
-                share: FileShare.Read);
-
-            using FileStream replicaStream = new(
-                path: destinationFile.FullName,
-                mode: FileMode.Create,
-                access: FileAccess.Write,
-                share: FileShare.None);
-
-            await sourceStream
-                .CopyToAsync(
-                    replicaStream, 
-                    cancellationToken);
-
-            replicatedFiles.Add(file);
+            yield return file;
         }
-
-        return ResultFactory.Success<IReadOnlyCollection<FileInfo>>(
-            replicatedFiles);
     }
 }
