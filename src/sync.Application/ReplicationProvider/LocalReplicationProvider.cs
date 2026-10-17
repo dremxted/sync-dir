@@ -50,4 +50,66 @@ public class LocalReplicationProvider
                 originDirectoryInfo, 
                 replicaDirectoryInfo));
     }
+
+    /// <summary>
+    /// Synchronously replicates new files from 
+    /// <paramref name="OriginDirectory"/> to <paramref name="ReplicaDirectory"/>. 
+    /// </summary>
+    /// <param name="cancellationToken"></param>
+    /// <returns>Successfull result containing replicated file infos if files replicated successfully; 
+    /// Otherwise, failure result, containing error details.</returns>
+    public async Task<Result<IReadOnlyCollection<FileInfo>>> ReplicateNewFiles(
+        CancellationToken cancellationToken)
+    {
+        List<FileInfo> replicatedFiles = new();
+
+        IEnumerable<FileInfo> originFiles = _originDirectory.EnumerateFiles( 
+            searchPattern: "*", 
+            searchOption: SearchOption.AllDirectories);
+        
+        foreach(FileInfo file in originFiles)
+        {
+            string replicaRelativePath = Path.GetRelativePath(
+                _originDirectory.FullName,
+                file.FullName);
+
+            FileInfo destinationFile = new(Path
+                .Combine(_replicaDirectory.FullName, replicaRelativePath));
+            
+            if(destinationFile.Exists)
+            {
+                continue;
+            }
+
+            if(destinationFile.DirectoryName is null)
+            {
+                return ResultFactory.Failure<IReadOnlyCollection<FileInfo>>(
+                    DirectoryErrors.FileDirectoryNotFound(destinationFile.FullName));
+            }
+
+            Directory.CreateDirectory(destinationFile.DirectoryName);
+            
+            using FileStream sourceStream = new(
+                path: file.FullName,
+                mode: FileMode.Open,
+                access: FileAccess.Read,
+                share: FileShare.Read);
+
+            using FileStream replicaStream = new(
+                path: destinationFile.FullName,
+                mode: FileMode.Create,
+                access: FileAccess.Write,
+                share: FileShare.None);
+
+            await sourceStream
+                .CopyToAsync(
+                    replicaStream, 
+                    cancellationToken);
+
+            replicatedFiles.Add(file);
+        }
+
+        return ResultFactory.Success<IReadOnlyCollection<FileInfo>>(
+            replicatedFiles);
+    }
 }
