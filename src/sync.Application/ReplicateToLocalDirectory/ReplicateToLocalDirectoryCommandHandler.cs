@@ -1,4 +1,5 @@
 ﻿using Mediator;
+using Microsoft.Extensions.Logging;
 using Shared.Results;
 using sync.Application.ReplicationProvider;
 
@@ -7,94 +8,39 @@ namespace sync.Application.ReplicateToLocalDirectory;
 public sealed class ReplicateToLocalDirectoryCommandHandler 
     : ICommandHandler<ReplicateToLocalDirectoryCommand, Result>
 {
+    private readonly ILogger _logger;
+
+    public ReplicateToLocalDirectoryCommandHandler(
+        ILogger<ReplicateToLocalDirectoryCommandHandler> logger)
+    {
+        _logger = logger;
+    }
+
     public async ValueTask<Result> Handle(
         ReplicateToLocalDirectoryCommand command, 
         CancellationToken cancellationToken)
     {
-        Result replicateDirectoryResult = await ReplicateDirectory(
-                command.OriginDirectoryPath.Value,
-                command.ReplicaDirectoryPath.Value);
+        Result<LocalReplicationProvider> replicationProviderResult = LocalReplicationProvider.Create(
+            command.OriginDirectoryPath.Value, 
+            command.ReplicaDirectoryPath.Value);
 
-        if(replicateDirectoryResult.IsFailure)
+        if(replicationProviderResult.IsFailure)
         {
-            return replicateDirectoryResult;
+            return replicationProviderResult;
         }
 
-        return replicateDirectoryResult;
-    }
+        _logger.LogInformation("Replicating new files...");
 
-    private async Task<Result> ReplicateDirectory(
-        string originDirectoryPath, 
-        string replicaDirectoryPath)
-    {
-        // Arrange
-        bool directoriesLooped = replicaDirectoryPath
-            .StartsWith(originDirectoryPath);
+        Result replicateNewFilesResult = await replicationProviderResult.Value
+            .ReplicateNewFiles(cancellationToken: cancellationToken);
         
-        if(directoriesLooped)
+        _logger.LogInformation("New files replicated.");
+
+        if(replicateNewFilesResult.IsFailure)
         {
-            return ResultFactory
-                .Failure(ReplicationErrors.ReplicationLoop(
-                    originDirectoryPath: replicaDirectoryPath,
-                    replicaDirectoryPath: replicaDirectoryPath)); 
+            return replicationProviderResult;
         }
 
-        DirectoryInfo originDirectoryInfo = new(originDirectoryPath);
-        DirectoryInfo replicaDirectoryInfo = new(replicaDirectoryPath);
-
-        if(!originDirectoryInfo.Exists)
-        {
-            return ResultFactory
-                .Failure(DirectoryErrors.DoesNotExist(originDirectoryPath));
-        }
-
-        if(!replicaDirectoryInfo.Exists /*or empty*/)
-        {
-            //Override new, replicate everything and return;
-            return ResultFactory
-                .Failure(DirectoryErrors.DoesNotExist(replicaDirectoryPath));
-        }
-
-        // Act
-        FileSystemInfo[] originItems = originDirectoryInfo
-            .GetFileSystemInfos();
-        
-        FileSystemInfo[] replicaItems = replicaDirectoryInfo
-            .GetFileSystemInfos();
-
-        IEnumerable<FileSystemInfo> newSystemInfos = 
-            (from originItem in originItems
-            where !replicaItems
-                .Any(item => item.Name == originItem.Name)
-            select originItem)
-            .ToList();
-
-        IEnumerable<FileSystemInfo> persistedSystemInfos = 
-            (from originItem in originItems
-            join replicaItem in replicaItems
-                on originItem.Name equals replicaItem.Name
-            select originItem)
-            .ToList();
-
-        IEnumerable<FileSystemInfo> deletedSystemInfos = 
-            (from replicaItem in replicaItems 
-            where !originItems
-                .Any(item => item.Name == replicaItem.Name)
-            select replicaItem)
-            .ToList();
-        
-        // [TODO]
-        // Delete all obsolete items
-
-        //Handle new items
-        //  Directory: FileSystem.CopyDirectory()
-        //  File: FilySystem.CopyFile()
-
-        // Handle persisted items
-        //  Folder: recursive method call
-        //  File: Compare hashes & skip / copy
-
-        // Finish
-        return ResultFactory.Success();
+        return replicationProviderResult;
     }
 }
