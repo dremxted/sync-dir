@@ -6,7 +6,7 @@ using sync.Application.VersionControlSystems;
 
 namespace sync.Infrastructure.Replicators;
 
-public class LocalReplicatorFactory : IReplicatorFactory<FileSystemInfo>
+public class LocalReplicatorFactory : IReplicatorFactory
 {
     private readonly IVersionControlSystem<FileSystemInfo> _versionControlSystem;
 
@@ -16,7 +16,7 @@ public class LocalReplicatorFactory : IReplicatorFactory<FileSystemInfo>
         _versionControlSystem = versionControlSystem;
     }
     
-    public Result<IReplicator<FileSystemInfo>> Create(
+    public Result<IReplicator> Create(
         string originDirectoryPath, 
         string replicaDirectoryPath)
     {
@@ -25,7 +25,7 @@ public class LocalReplicatorFactory : IReplicatorFactory<FileSystemInfo>
         
         if(directoriesLooped)
         {
-            return ResultFactory.Failure<IReplicator<FileSystemInfo>>(
+            return ResultFactory.Failure<IReplicator>(
                 ReplicationErrors.ReplicationLoop(
                     originDirectoryPath: originDirectoryPath,
                     replicaDirectoryPath: replicaDirectoryPath)); 
@@ -36,11 +36,11 @@ public class LocalReplicatorFactory : IReplicatorFactory<FileSystemInfo>
 
         if(!originDirectoryInfo.Exists)
         {
-            return ResultFactory.Failure<IReplicator<FileSystemInfo>>(
+            return ResultFactory.Failure<IReplicator>(
                 DirectoryErrors.DoesNotExist(originDirectoryPath));
         };
         
-        return ResultFactory.Success<IReplicator<FileSystemInfo>>(
+        return ResultFactory.Success<IReplicator>(
             new LocalReplicator(
                 originDirectoryInfo, 
                 replicaDirectoryInfo,

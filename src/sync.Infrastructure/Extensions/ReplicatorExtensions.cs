@@ -8,7 +8,7 @@ public static class ReplicatorExtensions
 {
     public static IServiceCollection AddReplicatorFactory(this IServiceCollection services)
     {
-        services.AddScoped<IReplicatorFactory<FileSystemInfo>, LocalReplicatorFactory>();
+        services.AddScoped<IReplicatorFactory, LocalReplicatorFactory>();
         return services;
     }
 }

@@ -2,9 +2,9 @@
 
 namespace sync.Application.Replicators;
 
-public interface IReplicatorFactory<TFileInfo>
+public interface IReplicatorFactory
 {
-    public Result<IReplicator<TFileInfo>> Create(
+    public Result<IReplicator> Create(
         string originDirectoryPath, 
         string replicaDirectoryPath);
 }

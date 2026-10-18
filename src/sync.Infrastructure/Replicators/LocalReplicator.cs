@@ -1,12 +1,11 @@
-﻿using System.Runtime.CompilerServices;
-using Shared.Results;
+﻿using Shared.Results;
 using sync.Application.ReplicateToLocalDirectory;
 using sync.Application.Replicators;
 using sync.Application.VersionControlSystems;
 
 namespace sync.Infrastructure.Replicators;
 
-public class LocalReplicator : IReplicator<FileSystemInfo>
+public class LocalReplicator : IReplicator
 {
     private readonly DirectoryInfo _originDirectory;
     private readonly DirectoryInfo _replicaDirectory;
@@ -27,70 +26,52 @@ public class LocalReplicator : IReplicator<FileSystemInfo>
         _versionControlSystem = versionControlSystem;
     }
 
-    public async IAsyncEnumerable<Result<FileSystemInfo>> ReplicateAddedAsync(
-        [EnumeratorCancellation] CancellationToken cancellationToken)
+    public async Task<Result> ReplicateAddedAsync(
+        CancellationToken cancellationToken)
     {
-        IAsyncEnumerable<Result<FileSystemInfo>> added = _versionControlSystem
+        IAsyncEnumerable<Result<FileSystemInfo>> addedFileResults = _versionControlSystem
             .EnumerateAddedFilesAsync(
                 _originDirectory.FullName, 
                 _replicaDirectory.FullName, 
                 cancellationToken);
-                
-        await foreach (var fileResult in added)
+        
+        await foreach(var info in addedFileResults)
         {
-            if(fileResult.IsFailure)
-            {
-                yield return fileResult;
-                continue;
-            }
-
             Result replicateResult = await ReplicateFileAsync(
-                fileResult.Value, 
+                info.Value,
                 cancellationToken);
             
             if(replicateResult.IsFailure)
             {
-                yield return ResultFactory.Failure<FileSystemInfo>(
-                    replicateResult.Error);
-
-                continue;
+                return replicateResult;
             }
-            
-            yield return fileResult;
         }
+
+        return ResultFactory.Success();
     }
 
-    public async IAsyncEnumerable<Result<FileSystemInfo>> ReplicateModifiedAsync(
-        [EnumeratorCancellation] CancellationToken cancellationToken)
+    public async Task<Result> ReplicateModifiedAsync(
+        CancellationToken cancellationToken)
     {
-        IAsyncEnumerable<Result<FileSystemInfo>> modified = _versionControlSystem
+        IAsyncEnumerable<Result<FileSystemInfo>> modifiedFileResults = _versionControlSystem
             .EnumerateModifiedFilesAsync(
                 _originDirectory.FullName, 
                 _replicaDirectory.FullName, 
                 cancellationToken);
-                
-        await foreach (var fileResult in modified)
-        {
-            if(fileResult.IsFailure)
-            {
-                yield return fileResult;
-                continue;
-            }
 
+        await foreach(var info in modifiedFileResults)
+        {
             Result replicateResult = await ReplicateFileAsync(
-                fileResult.Value, 
+                info.Value,
                 cancellationToken);
             
             if(replicateResult.IsFailure)
             {
-                yield return ResultFactory.Failure<FileSystemInfo>(
-                    replicateResult.Error);
-                
-                continue;
+                return replicateResult;
             }
-            
-            yield return fileResult;
         }
+
+        return ResultFactory.Success();
     }
 
     private async Task<Result> ReplicateFileAsync(

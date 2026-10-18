@@ -2,11 +2,11 @@
 
 namespace sync.Application.Replicators;
 
-public interface IReplicator<TFileInfo>
+public interface IReplicator
 {
-    public IAsyncEnumerable<Result<TFileInfo>> ReplicateAddedAsync(
+    public Task<Result> ReplicateAddedAsync(
         CancellationToken cancellationToken);
     
-    public IAsyncEnumerable<Result<TFileInfo>> ReplicateModifiedAsync(
+    public Task<Result> ReplicateModifiedAsync(
         CancellationToken cancellationToken);
 }
