@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using sync.CLI.Contracts;
 using sync.CLI.ReplicateToLocalDirectory;
+using sync.Infrastructure;
 
 namespace sync.CLI;
 
@@ -32,6 +33,8 @@ public class ReplicateToLocalDirectoryActionHandler
 
         builder.Services
             .AddMediator()
+            .AddReplicatorFactory()
+            .AddVersionControlSystems()
             .AddHostedService<ReplicateToLocalDirectoryService>()
             .AddSingleton(args);
 
