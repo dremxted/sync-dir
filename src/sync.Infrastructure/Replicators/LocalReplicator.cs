@@ -1,4 +1,5 @@
-﻿using Shared.Results;
+﻿using Microsoft.Extensions.Logging;
+using Shared.Results;
 using sync.Application.Directories;
 using sync.Application.Files;
 using sync.Application.Replicators;
@@ -11,6 +12,7 @@ public class LocalReplicator : IReplicator
     private readonly DirectoryInfo _originDirectory;
     private readonly DirectoryInfo _replicaDirectory;
     private readonly IVersionControlSystem<FileSystemInfo> _versionControlSystem;
+    private readonly ILogger<LocalReplicator> _logger;
 
     public DirectoryInfo OriginDirectory 
         => new(_originDirectory.FullName);
@@ -20,11 +22,13 @@ public class LocalReplicator : IReplicator
     internal LocalReplicator(
         DirectoryInfo originDirectory, 
         DirectoryInfo replicaDirectory,
-        IVersionControlSystem<FileSystemInfo> versionControlSystem)
+        IVersionControlSystem<FileSystemInfo> versionControlSystem,
+        ILogger<LocalReplicator> logger)
     {
         _originDirectory = originDirectory;
         _replicaDirectory = replicaDirectory;
         _versionControlSystem = versionControlSystem;
+        _logger = logger;
     }
 
     public async Task<Result> ReplicateAddedAsync(
@@ -109,6 +113,10 @@ public class LocalReplicator : IReplicator
 
     private Result TryDeleteFile(FileSystemInfo file)
     {
+        _logger.LogInformation(
+            "Deleting item at path: {path}", 
+            file.FullName);
+
         try
         {
             switch (file)
@@ -128,10 +136,19 @@ public class LocalReplicator : IReplicator
         {
             if(ex is not null)
             {
-                return ResultFactory.Failure<FileSystemInfo>(
-                    VersionControlErrors.FileAccessDenied(file.FullName));
+                Error error = VersionControlErrors.FileAccessDenied(file.FullName);
+                
+                _logger.LogInformation(
+                    "Unable to delete item due to an error: {error}", 
+                    error.Message);
+                
+                return ResultFactory.Failure<FileSystemInfo>(error);
             }
         }
+
+        _logger.LogInformation(
+            "Successfully deleted item at path: {path}", 
+            file.FullName);
 
         return ResultFactory.Success();
     }
@@ -178,6 +195,11 @@ public class LocalReplicator : IReplicator
 
             await using FileStream replicaStream = replicaStreamResult.Value;
 
+            _logger.LogInformation(
+                "Replicating {file} to path: {destination}",
+                file.FullName,
+                replicaFile.FullName);
+
             await sourceStream.CopyToAsync(
                 replicaStream, 
                 cancellationToken);
@@ -185,8 +207,18 @@ public class LocalReplicator : IReplicator
 
         else if(file is DirectoryInfo)
         {
+            _logger.LogInformation(
+                "Creating directory {directory} at path: {destination}",
+                file.FullName,
+                replicaFile.FullName);
+
             Directory.CreateDirectory(replicaFile.FullName);
         }
+
+        _logger.LogInformation(
+                "Successfully replicated item {item} at path: {path}",
+                file.FullName,
+                replicaFile.FullName);
 
         return ResultFactory.Success();
     }

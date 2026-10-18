@@ -1,4 +1,5 @@
-﻿using Shared.Results;
+﻿using Microsoft.Extensions.Logging;
+using Shared.Results;
 using sync.Application.Directories;
 using sync.Application.Replicators;
 using sync.Application.VersionControlSystems;
@@ -8,11 +9,14 @@ namespace sync.Infrastructure.Replicators;
 public class LocalReplicatorFactory : IReplicatorFactory
 {
     private readonly IVersionControlSystem<FileSystemInfo> _versionControlSystem;
+    private readonly ILogger<LocalReplicator> _replicatorLogger;
 
     public LocalReplicatorFactory(
-        IVersionControlSystem<FileSystemInfo> versionControlSystem)
+        IVersionControlSystem<FileSystemInfo> versionControlSystem,
+        ILogger<LocalReplicator> logger)
     {
         _versionControlSystem = versionControlSystem;
+        _replicatorLogger = logger;
     }
     
     public Result<IReplicator> Create(
@@ -43,6 +47,7 @@ public class LocalReplicatorFactory : IReplicatorFactory
             new LocalReplicator(
                 originDirectoryInfo, 
                 replicaDirectoryInfo,
-                _versionControlSystem));
+                _versionControlSystem,
+                _replicatorLogger));
     }
 }
