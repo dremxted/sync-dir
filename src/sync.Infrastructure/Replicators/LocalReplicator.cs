@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-using Microsoft.VisualBasic;
-using Shared.Results;
+﻿using Shared.Results;
 using sync.Application.ReplicateToLocalDirectory;
 using sync.Application.Replicators;
 using sync.Application.VersionControlSystems;
