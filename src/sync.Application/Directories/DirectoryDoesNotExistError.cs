@@ -1,6 +1,6 @@
 ﻿using Shared.Results;
 
-namespace sync.Application.ReplicateToLocalDirectory;
+namespace sync.Application.Directories;
 
 public sealed record DirectoryDoesNotExistError : Error
 {

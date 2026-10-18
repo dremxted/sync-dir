@@ -1,6 +1,6 @@
 ﻿using Shared.Results;
 
-namespace sync.Application;
+namespace sync.Application.Directories;
 
 public record class FileDirectoryNotFoundError : Error
 {
