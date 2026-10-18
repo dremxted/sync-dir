@@ -44,9 +44,17 @@ public class LocalReplicator : IReplicator<FileSystemInfo>
                 continue;
             }
 
-            await ReplicateFileAsync(
+            Result replicateResult = await ReplicateFileAsync(
                 fileResult.Value, 
                 cancellationToken);
+            
+            if(replicateResult.IsFailure)
+            {
+                yield return ResultFactory.Failure<FileSystemInfo>(
+                    replicateResult.Error);
+
+                continue;
+            }
             
             yield return fileResult;
         }
@@ -68,10 +76,18 @@ public class LocalReplicator : IReplicator<FileSystemInfo>
                 yield return fileResult;
                 continue;
             }
-            
-            await ReplicateFileAsync(
+
+            Result replicateResult = await ReplicateFileAsync(
                 fileResult.Value, 
                 cancellationToken);
+            
+            if(replicateResult.IsFailure)
+            {
+                yield return ResultFactory.Failure<FileSystemInfo>(
+                    replicateResult.Error);
+                
+                continue;
+            }
             
             yield return fileResult;
         }
@@ -99,15 +115,28 @@ public class LocalReplicator : IReplicator<FileSystemInfo>
         {
             Directory.CreateDirectory(replicaFile.DirectoryName);
             
-            await using FileStream sourceStream = 
+            Result<FileStream> sourceStreamResult = 
                 OpenStreamForSourceDirectory(file.FullName);
 
-            await using FileStream replicaStream = 
+            if(sourceStreamResult.IsFailure)
+            {
+                return sourceStreamResult;
+            }
+
+            Result<FileStream> replicaStreamResult = 
                 OpenStreamForDestinationDirectory(replicaFile.FullName);
 
-            await sourceStream.CopyToAsync(
-                replicaStream, 
+            if(replicaStreamResult.IsFailure)
+            {
+                return replicaStreamResult;
+            }
+
+            await sourceStreamResult.Value.CopyToAsync(
+                replicaStreamResult.Value, 
                 cancellationToken);
+
+            sourceStreamResult.Value.Close();
+            replicaStreamResult.Value.Close();
         }
 
         else if(file is DirectoryInfo)
@@ -118,21 +147,45 @@ public class LocalReplicator : IReplicator<FileSystemInfo>
         return ResultFactory.Success();
     }
 
-    private FileStream OpenStreamForSourceDirectory(string fileFullName)
+    private Result<FileStream> OpenStreamForSourceDirectory(string fileFullName)
     {
-        return File.Open(
-            path: fileFullName,
-            mode: FileMode.Open,
-            access: FileAccess.Read,
-            share: FileShare.Read);
+        FileStream? fileStream;
+
+        try
+        {
+            fileStream = File.Open(
+                path: fileFullName,
+                mode: FileMode.Open,
+                access: FileAccess.Read,
+                share: FileShare.Read);
+        }
+        catch(FileNotFoundException)
+        {
+            return ResultFactory.Failure<FileStream>(
+                FileErrors.NotFound(fileFullName));
+        }
+
+        return ResultFactory.Success(fileStream);
     }
 
-    private FileStream OpenStreamForDestinationDirectory(string fileFullName)
+    private Result<FileStream> OpenStreamForDestinationDirectory(string fileFullName)
     {
-        return File.Open(
-            path: fileFullName,
-            mode: FileMode.Create,
-            access: FileAccess.Write,
-            share: FileShare.None);
+        FileStream? fileStream = null;
+
+        try
+        {
+            fileStream =  File.Open(
+                path: fileFullName,
+                mode: FileMode.Create,
+                access: FileAccess.Write,
+                share: FileShare.None);
+        }
+        catch(FileNotFoundException)
+        {
+            return ResultFactory.Failure<FileStream>(
+                FileErrors.NotFound(fileFullName));
+        }
+
+        return ResultFactory.Success(fileStream);
     }
 }
