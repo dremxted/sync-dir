@@ -26,7 +26,7 @@ public class LocalReplicatorFactory : IReplicatorFactory
         if(directoriesLooped)
         {
             return ResultFactory.Failure<IReplicator>(
-                ReplicationErrors.ReplicationLoop(
+                VersionControlErrors.DirectoryLoop(
                     originDirectoryPath: originDirectoryPath,
                     replicaDirectoryPath: replicaDirectoryPath)); 
         }
