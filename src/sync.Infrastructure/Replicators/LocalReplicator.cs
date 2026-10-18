@@ -1,7 +1,6 @@
 ﻿using Shared.Results;
 using sync.Application.Directories;
 using sync.Application.Files;
-using sync.Application.ReplicateToLocalDirectory;
 using sync.Application.Replicators;
 using sync.Application.VersionControlSystems;
 
