@@ -30,6 +30,9 @@ public sealed class ReplicateToLocalDirectoryCommandHandler
         }
 
         await replicatorResult.Value
+            .DeleteObsoleteAsync(cancellationToken);
+
+        await replicatorResult.Value
             .ReplicateAddedAsync(cancellationToken);
 
         await replicatorResult.Value
