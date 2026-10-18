@@ -1,33 +1,40 @@
 ﻿using Mediator;
 using Shared.Results;
-using sync.Application.ReplicationProvider;
+using sync.Application.Replicators;
 
 namespace sync.Application.ReplicateToLocalDirectory;
 
 public sealed class ReplicateToLocalDirectoryCommandHandler 
     : ICommandHandler<ReplicateToLocalDirectoryCommand, Result>
 {
+    private readonly IReplicatorFactory _replicatorFactory;
+
+    public ReplicateToLocalDirectoryCommandHandler(
+        IReplicatorFactory replicatorFactory)
+    {
+        _replicatorFactory = replicatorFactory;
+    }
+
     public async ValueTask<Result> Handle(
         ReplicateToLocalDirectoryCommand command, 
         CancellationToken cancellationToken)
     {
-        Result<LocalReplicationProvider> replicationProviderResult = LocalReplicationProvider.Create(
-            command.OriginDirectoryPath.Value, 
-            command.ReplicaDirectoryPath.Value);
-
-        if(replicationProviderResult.IsFailure)
+        Result<IReplicator> replicatorResult = 
+            _replicatorFactory.Create(
+                command.OriginDirectoryPath.Value, 
+                command.ReplicaDirectoryPath.Value);
+        
+        if(replicatorResult.IsFailure)
         {
-            return replicationProviderResult;
+            return replicatorResult;
         }
 
-        Result replicateNewFilesResult = await replicationProviderResult.Value
-            .ReplicateNewFiles(cancellationToken: cancellationToken);
+        await replicatorResult.Value
+            .ReplicateAddedAsync(cancellationToken);
 
-        if(replicateNewFilesResult.IsFailure)
-        {
-            return replicationProviderResult;
-        }
+        await replicatorResult.Value
+            .ReplicateModifiedAsync(cancellationToken);
 
-        return replicationProviderResult;
+        return ResultFactory.Success();
     }
 }

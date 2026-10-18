@@ -25,15 +25,11 @@ internal class ReplicateToLocalDirectoryService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        // Arrange
         OriginDirectoryPath originDirectoryPath = new(_args.OriginDirectoryPath);
         ReplicaDirectoryPath replicaDirectoryPath = new(_args.DestinationDirectoryPath);
-
-        //Act
+        
         while(!cancellationToken.IsCancellationRequested)
         {
-            _logger.LogInformation("Replicating new files...");
-            
             Result replicateResult = await _sender.Send(new Application.ReplicateToLocalDirectory
                 .ReplicateToLocalDirectoryCommand(
                     originDirectoryPath, 
@@ -42,18 +38,13 @@ internal class ReplicateToLocalDirectoryService : BackgroundService
             if(replicateResult.IsFailure)
             {
                 _logger
-                    .LogInformation(
-                        "Failed to replicate directory. Error Code: {Code}, Error Message: {Message}. Retrying...",
-                        replicateResult.Error.Code,
-                        replicateResult.Error.Message);
+                    .LogInformation("Unable to replicate due to an error: {error}",
+                    string.Join(": ", replicateResult.Error.Code, replicateResult.Error.Message));
             }
             else
             {
-                _logger
-                    .LogInformation(
-                        "Successfully replicated {OriginDirectoryPath} at {ReplicaDirectoryPath}",
-                        originDirectoryPath.Value,
-                        replicaDirectoryPath.Value);
+                _logger.LogInformation(
+                    "Successfully replicated origin to destination.");
             }
             
             await Task.Delay(TimeSpan.FromSeconds(
