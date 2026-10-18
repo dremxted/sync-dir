@@ -1,4 +1,6 @@
-﻿using Shared.Results;
+﻿using System.Diagnostics;
+using Microsoft.VisualBasic;
+using Shared.Results;
 using sync.Application.ReplicateToLocalDirectory;
 using sync.Application.Replicators;
 using sync.Application.VersionControlSystems;
@@ -89,21 +91,53 @@ public class LocalReplicator : IReplicator
             {
                 return file;
             }
-
-            if(file.Value is DirectoryInfo)
+            
+            if(!file.Value.Exists)
             {
-                Directory.Delete(
-                    path: file.Value.FullName, 
-                    recursive: true);
+                continue;
             }
 
-            if(file.Value is FileInfo
-                && file.Value.Exists)
+            Result deleteFileResult = TryDeleteFile(file.Value);
+
+            if(deleteFileResult.IsFailure)
             {
-                File.Delete(file.Value.FullName);
+                return deleteFileResult;
             }
         }
+
         return ResultFactory.Success();
+    }
+
+    private Result TryDeleteFile(FileSystemInfo file)
+    {
+        try
+        {
+            switch (file)
+            {
+                case FileInfo:
+                    File.Delete(file.FullName);
+                    break;
+                
+                case DirectoryInfo:
+                    Directory.Delete(
+                        path: file.FullName, 
+                        recursive: true);
+                        break;
+            }
+
+            return ResultFactory.Success();
+        }
+        catch(IOException ex)
+        {
+            if(ex is not null)
+            {
+                return ResultFactory.Failure<FileSystemInfo>(
+                    VersionControlErrors.FileAccessDenied(file.FullName));
+            }
+            
+            return ResultFactory.Success();
+        }
+
     }
 
     private async Task<Result> ReplicateFileAsync(
