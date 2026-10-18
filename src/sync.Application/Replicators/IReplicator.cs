@@ -9,4 +9,7 @@ public interface IReplicator
     
     public Task<Result> ReplicateModifiedAsync(
         CancellationToken cancellationToken);
+
+    public Task<Result> DeleteObsoleteAsync(
+        CancellationToken cancellationToken);
 }

@@ -74,6 +74,38 @@ public class LocalReplicator : IReplicator
         return ResultFactory.Success();
     }
 
+    public async Task<Result> DeleteObsoleteAsync(
+        CancellationToken cancellationToken)
+    {
+        IAsyncEnumerable<Result<FileSystemInfo>> obsoleteFileResults = _versionControlSystem
+            .EnumerateUniqueFilesAsync(
+                _replicaDirectory.FullName, 
+                _originDirectory.FullName, 
+                cancellationToken);
+
+        await foreach(Result<FileSystemInfo> file in obsoleteFileResults)
+        {
+            if(file.IsFailure)
+            {
+                return file;
+            }
+
+            if(file.Value is DirectoryInfo)
+            {
+                Directory.Delete(
+                    path: file.Value.FullName, 
+                    recursive: true);
+            }
+
+            if(file.Value is FileInfo
+                && file.Value.Exists)
+            {
+                File.Delete(file.Value.FullName);
+            }
+        }
+        return ResultFactory.Success();
+    }
+
     private async Task<Result> ReplicateFileAsync(
         FileSystemInfo file, 
         CancellationToken cancellationToken)
