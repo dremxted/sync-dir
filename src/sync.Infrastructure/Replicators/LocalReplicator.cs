@@ -122,8 +122,6 @@ public class LocalReplicator : IReplicator
                         recursive: true);
                         break;
             }
-
-            return ResultFactory.Success();
         }
         catch(IOException ex)
         {
@@ -132,10 +130,9 @@ public class LocalReplicator : IReplicator
                 return ResultFactory.Failure<FileSystemInfo>(
                     VersionControlErrors.FileAccessDenied(file.FullName));
             }
-            
-            return ResultFactory.Success();
         }
 
+        return ResultFactory.Success();
     }
 
     private async Task<Result> ReplicateFileAsync(
