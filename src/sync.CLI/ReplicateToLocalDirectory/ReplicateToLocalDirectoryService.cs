@@ -2,7 +2,9 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Shared.Results;
-using sync.Application.ReplicateToLocalDirectory;
+using sync.Application.DeleteObsoleteFiles;
+using sync.Application.ReplicateAddedFiles;
+using sync.Application.ReplicateModifiedFiles;
 using sync.CLI.ReplicateToLocalDirectory;
 
 namespace sync.CLI;
@@ -25,27 +27,19 @@ internal class ReplicateToLocalDirectoryService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        OriginDirectoryPath originDirectoryPath = new(_args.OriginDirectoryPath);
-        ReplicaDirectoryPath replicaDirectoryPath = new(_args.DestinationDirectoryPath);
-        
         while(!cancellationToken.IsCancellationRequested)
         {
-            Result replicateResult = await _sender.Send(new Application.ReplicateToLocalDirectory
-                .ReplicateToLocalDirectoryCommand(
-                    originDirectoryPath, 
-                    replicaDirectoryPath));
-            
-            if(replicateResult.IsFailure)
-            {
-                _logger
-                    .LogInformation("Unable to replicate due to an error: {error}",
-                    string.Join(": ", replicateResult.Error.Code, replicateResult.Error.Message));
-            }
-            else
-            {
-                _logger.LogInformation(
-                    "Successfully replicated origin to destination.");
-            }
+            await _sender.Send(new DeleteObsoleteFilesCommand(
+                _args.OriginDirectoryPath, 
+                _args.DestinationDirectoryPath));
+
+            await _sender.Send(new ReplicateModifiedFilesCommand(
+                _args.OriginDirectoryPath, 
+                _args.DestinationDirectoryPath));
+
+            await _sender.Send(new ReplicateAddedFilesCommand(
+                _args.OriginDirectoryPath, 
+                _args.DestinationDirectoryPath));
             
             await Task.Delay(TimeSpan.FromSeconds(
                 _args.IntervalSeconds));
