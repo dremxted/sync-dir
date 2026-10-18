@@ -136,6 +136,8 @@ public class LocalReplicator : IReplicator
                 return sourceStreamResult;
             }
 
+            await using FileStream sourceStream = sourceStreamResult.Value;
+
             Result<FileStream> replicaStreamResult = 
                 OpenStreamForDestinationDirectory(replicaFile.FullName);
 
@@ -144,12 +146,11 @@ public class LocalReplicator : IReplicator
                 return replicaStreamResult;
             }
 
-            await sourceStreamResult.Value.CopyToAsync(
-                replicaStreamResult.Value, 
-                cancellationToken);
+            await using FileStream replicaStream = replicaStreamResult.Value;
 
-            sourceStreamResult.Value.Close();
-            replicaStreamResult.Value.Close();
+            await sourceStream.CopyToAsync(
+                replicaStream, 
+                cancellationToken);
         }
 
         else if(file is DirectoryInfo)
