@@ -78,7 +78,7 @@ public sealed class LocalVersionControlSystem : IVersionControlSystem<FileSystem
         }
     }
 
-    public async IAsyncEnumerable<Result<FileSystemInfo>> EnumerateAddedFilesAsync(
+    public async IAsyncEnumerable<Result<FileSystemInfo>> EnumerateUniqueFilesAsync(
         string originDirectoryPath, 
         string destinationDirectoryPath,
         [EnumeratorCancellation] CancellationToken cancellationToken)

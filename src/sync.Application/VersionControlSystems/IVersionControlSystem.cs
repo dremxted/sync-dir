@@ -11,7 +11,7 @@ public interface IVersionControlSystem<TFileInfo>
     /// <param name="destinationPath">Path to the comparison directory whose files are used against origin directory.</param>
     /// <param name="cancellationToken"></param>
     /// <returns>Files that only exist in origin directory</returns>
-    public IAsyncEnumerable<Result<TFileInfo>> EnumerateAddedFilesAsync(
+    public IAsyncEnumerable<Result<TFileInfo>> EnumerateUniqueFilesAsync(
         string originPath, 
         string destinationPath,
         CancellationToken cancellationToken);

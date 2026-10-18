@@ -30,7 +30,7 @@ public class LocalReplicator : IReplicator
         CancellationToken cancellationToken)
     {
         IAsyncEnumerable<Result<FileSystemInfo>> addedFileResults = _versionControlSystem
-            .EnumerateAddedFilesAsync(
+            .EnumerateUniqueFilesAsync(
                 _originDirectory.FullName, 
                 _replicaDirectory.FullName, 
                 cancellationToken);
