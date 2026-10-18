@@ -34,10 +34,10 @@ public sealed class LocalVersionControlSystem : IVersionControlSystem<FileSystem
             }
 
             Result<FileStream> sourceStreamResult = 
-                OpenStreamForHashing(file.FullName);
+                OpenStreamForSource(file.FullName);
             
             Result<FileStream> replicaStreamResult = 
-                OpenStreamForHashing(destinationFile.FullName);
+                OpenStreamForReplica(destinationFile.FullName);
 
             if(sourceStreamResult.IsFailure)
             {
@@ -113,7 +113,29 @@ public sealed class LocalVersionControlSystem : IVersionControlSystem<FileSystem
         }
     }
 
-    private Result<FileStream> OpenStreamForHashing(
+    private Result<FileStream> OpenStreamForSource(
+    string fileFullName)
+    {
+        FileStream? stream;
+        try
+        {
+            stream = File.Open(
+                path: fileFullName, 
+                mode: FileMode.Open, 
+                access: FileAccess.Read,
+                share: FileShare.Delete);
+        }
+
+        catch (IOException)
+        {
+            return ResultFactory.Failure<FileStream>(
+                VersionControlErrors.FileAccessDenied(fileFullName));
+        }
+
+        return ResultFactory.Success(stream);
+    }
+
+    private Result<FileStream> OpenStreamForReplica(
         string fileFullName)
     {
         FileStream? stream;
