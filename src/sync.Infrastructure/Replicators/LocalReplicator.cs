@@ -38,7 +38,7 @@ public partial class LocalReplicator : IReplicator
     
     public IObsoleteItemsCleaner GetObsoleteItemsCleaner() => this;
 
-    private async Task<Result> ReplicateFileSystemInfoAsync(
+    private async Task<Result<FileSystemInfo>> ReplicateFileSystemInfoAsync(
         FileSystemInfo source, 
         CancellationToken cancellationToken)
     {
@@ -46,34 +46,42 @@ public partial class LocalReplicator : IReplicator
                 _originDirectory.FullName,
                 source.FullName);
 
-        Result replicateResult;
+        Result replicatedItemResult;
+        FileSystemInfo? info = null;
+
         switch (source)
         {
             case FileInfo sourceFile:
-                replicateResult = await ReplicateFileAsync(
+                Result<FileInfo> replicatedFileResult = await ReplicateFileAsync(
                     sourceInfo: sourceFile, 
                     destinationRelativePath: replicaRelativePath,
                     cancellationToken);
+
+                replicatedItemResult = replicatedFileResult;
+                info = replicatedFileResult.Value;
                 break;
 
             case DirectoryInfo directoryInfo:
                 Directory.CreateDirectory(directoryInfo.FullName);
-                replicateResult = ResultFactory.Success();
+
+                info = directoryInfo;
+                replicatedItemResult = ResultFactory.Success();
                 break;
 
             default:
-                replicateResult = ResultFactory.Failure(
+                replicatedItemResult = ResultFactory.Failure<FileSystemInfo>(
                     FileErrors.NotFound(source.FullName));
                 break;
         }
 
-        if(replicateResult.IsFailure)
+        if(replicatedItemResult.IsFailure)
         {
             _logger.LogWarning(
                 "An error has occured while replicating {file}",
                 source.FullName);
 
-            return replicateResult;
+            return ResultFactory.Failure<FileSystemInfo>(
+                replicatedItemResult.Error);
         }
 
         _logger.LogInformation(
@@ -81,10 +89,10 @@ public partial class LocalReplicator : IReplicator
             source.FullName,
             Path.Join(_originDirectory.FullName,source.Name));
 
-        return ResultFactory.Success();
+        return ResultFactory.Success(info!);
     }
 
-    private async Task<Result> ReplicateFileAsync(
+    private async Task<Result<FileInfo>> ReplicateFileAsync(
         FileInfo sourceInfo,
         string destinationRelativePath, 
         CancellationToken cancellationToken = default)
@@ -95,7 +103,7 @@ public partial class LocalReplicator : IReplicator
 
         if(destinationInfo.DirectoryName is null)
         {
-            return ResultFactory.Failure<FileSystemInfo>(
+            return ResultFactory.Failure<FileInfo>(
                 DirectoryErrors.FileDirectoryNotFound(destinationInfo.FullName));
         }
 
@@ -109,7 +117,13 @@ public partial class LocalReplicator : IReplicator
         Result copyFileResult = await sourceInfo.CopyToAsync(
             destinationFile: destinationInfo, 
             cancellationToken: cancellationToken);
+        
+        if(copyFileResult.IsFailure)
+        {
+            return ResultFactory.Failure<FileInfo>(
+                copyFileResult.Error);
+        }
 
-        return copyFileResult;
+        return ResultFactory.Success(destinationInfo);
     }
 }
