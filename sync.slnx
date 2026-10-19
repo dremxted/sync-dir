@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Shared/Shared.csproj" />
+    <Project Path="src/sync.Application/sync.Application.csproj" />
+    <Project Path="src/sync.CLI/sync.CLI.csproj" />
+    <Project Path="src/sync.Infrastructure/sync.Infrastructure.csproj" />
+  </Folder>
+</Solution>
