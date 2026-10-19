@@ -57,15 +57,21 @@ public partial class LocalReplicator : IReplicator
                     destinationRelativePath: replicaRelativePath,
                     cancellationToken);
 
+                if(replicatedFileResult.IsSuccess)
+                {
+                    info = replicatedFileResult.Value;
+                }
+
                 replicatedItemResult = replicatedFileResult;
-                info = replicatedFileResult.Value;
                 break;
 
-            case DirectoryInfo directoryInfo:
-                Directory.CreateDirectory(directoryInfo.FullName);
+            case DirectoryInfo directory:
+                DirectoryInfo directoryInfo = Directory.CreateDirectory(Path.Join(
+                    _replicaDirectory.FullName,
+                    replicaRelativePath));
 
-                info = directoryInfo;
                 replicatedItemResult = ResultFactory.Success();
+                info = directoryInfo;
                 break;
 
             default:
@@ -77,8 +83,9 @@ public partial class LocalReplicator : IReplicator
         if(replicatedItemResult.IsFailure)
         {
             _logger.LogWarning(
-                "An error has occured while replicating {file}",
-                source.FullName);
+                "Handled error while replicating {file}: {message}",
+                source.FullName, 
+                replicatedItemResult.Error.Message);
 
             return ResultFactory.Failure<FileSystemInfo>(
                 replicatedItemResult.Error);
