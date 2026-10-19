@@ -28,6 +28,7 @@ public class ReplicateAddedFilesCommandHandler : ICommandHandler<ReplicateAddedF
         }
         
         Result deleteObsoleteResult = await replicatorResult.Value
+            .GetAddedItemsReplicator()
             .ReplicateAddedAsync(cancellationToken);
 
         return deleteObsoleteResult;

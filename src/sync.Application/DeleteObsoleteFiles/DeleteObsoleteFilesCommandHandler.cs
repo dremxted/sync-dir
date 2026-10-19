@@ -28,6 +28,7 @@ public class DeleteObsoleteFilesCommandHandler : ICommandHandler<DeleteObsoleteF
         }
         
         Result deleteObsoleteResult = await replicatorResult.Value
+            .GetObsoleteItemsCleaner()
             .DeleteObsoleteAsync(cancellationToken);
 
         return deleteObsoleteResult;

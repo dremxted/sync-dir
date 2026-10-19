@@ -28,6 +28,7 @@ public class ReplicateModifiedFilesCommandHandler : ICommandHandler<ReplicateMod
         }
         
         Result deleteObsoleteResult = await replicatorResult.Value
+            .GetModifiedItemsReplicator()
             .ReplicateModifiedAsync(cancellationToken);
 
         return deleteObsoleteResult;
