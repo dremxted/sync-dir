@@ -33,11 +33,11 @@ internal class ReplicateToLocalDirectoryService : BackgroundService
                 _args.OriginDirectoryPath, 
                 _args.DestinationDirectoryPath));
 
-            await _sender.Send(new ReplicateModifiedFilesCommand(
+            await _sender.Send(new ReplicateAddedFilesCommand(
                 _args.OriginDirectoryPath, 
                 _args.DestinationDirectoryPath));
 
-            await _sender.Send(new ReplicateAddedFilesCommand(
+            await _sender.Send(new ReplicateModifiedFilesCommand(
                 _args.OriginDirectoryPath, 
                 _args.DestinationDirectoryPath));
             
