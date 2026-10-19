@@ -79,7 +79,7 @@ public static class FileInfoExtensions
         return ResultFactory.Success();
     }
 
-    private static Result<FileStream> OpenStream(
+    public static Result<FileStream> OpenStream(
         string path, 
         FileMode mode, 
         FileAccess access, 
