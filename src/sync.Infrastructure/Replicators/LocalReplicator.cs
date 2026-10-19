@@ -66,6 +66,11 @@ public class LocalReplicator : IReplicator
 
         await foreach(var info in modifiedFileResults)
         {
+            if(info.IsFailure)
+            {
+                return info;    
+            }
+
             Result replicateResult = await ReplicateFileAsync(
                 info.Value,
                 cancellationToken);
@@ -233,7 +238,7 @@ public class LocalReplicator : IReplicator
                 path: fileFullName,
                 mode: FileMode.Open,
                 access: FileAccess.Read,
-                share: FileShare.Read);
+                share: FileShare.Delete);
         }
         catch(FileNotFoundException)
         {
