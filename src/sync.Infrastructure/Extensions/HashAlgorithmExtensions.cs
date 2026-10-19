@@ -18,12 +18,19 @@ public static class HashAlgorithmExtensions
             IncrementalHash incrementalHash = IncrementalHash.CreateHash(
                 hashAlgorithm: HashAlgorithmName.MD5);
 
-            await using FileStream stream = new(
-                file.FullName,
-                FileMode.Open, 
-                FileAccess.Read, 
-                FileShare.Delete);
+            Result<FileStream> streamResult = FileInfoExtensions.OpenStream(
+                path: file.FullName,
+                mode: FileMode.Open, 
+                access: FileAccess.Read, 
+                share: FileShare.Delete);
+            
+            if(streamResult.IsFailure)
+            {
+                return ResultFactory.Failure<byte[]>(
+                    streamResult.Error);
+            }
 
+            await using FileStream stream = streamResult.Value;
             byte[] buffer = new byte[bufferSize];
 
             Stopwatch stopwatch = Stopwatch.StartNew();
