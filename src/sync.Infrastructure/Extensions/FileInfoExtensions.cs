@@ -13,20 +13,35 @@ public static class FileInfoExtensions
         int refreshExistsMs = 1000,
         CancellationToken cancellationToken = default)
     {
-        byte[] buffer = new byte[bufferSize];
+        Result<FileStream> sourceStreamResult = OpenStream(
+                path: sourceFile.FullName,
+                mode: FileMode.Open,
+                access: FileAccess.Read,
+                share: FileShare.Delete);
         
-        await using FileStream sourceStream = new FileStream(
-            path: sourceFile.FullName,
-            mode: FileMode.Open,
-            access: FileAccess.Read,
-            share: FileShare.Delete);
+        if(sourceStreamResult.IsFailure)
+        {
+            return ResultFactory.Failure(
+                FileErrors.NotFound(sourceFile.FullName));
+        }
 
-        await using FileStream destinationStream = new FileStream(
-            destinationFile.FullName,
-            FileMode.Create,
-            FileAccess.Write,
-            FileShare.Read);
+        await using FileStream sourceStream = sourceStreamResult.Value;
+        
+        Result<FileStream> destinationStreamResult = OpenStream(
+                path: destinationFile.FullName,
+                mode: FileMode.Create,
+                access: FileAccess.Write,
+                share: FileShare.Read);
 
+        if(destinationStreamResult.IsFailure)
+        {
+            return ResultFactory.Failure(
+                FileErrors.NotFound(destinationFile.FullName));    
+        }
+
+        await using FileStream destinationStream = destinationStreamResult.Value;
+
+        byte[] buffer = new byte[bufferSize];
         Stopwatch refreshTimer = Stopwatch.StartNew();
 
         while (true)
@@ -62,5 +77,37 @@ public static class FileInfoExtensions
         }
 
         return ResultFactory.Success();
+    }
+
+    private static Result<FileStream> OpenStream(
+        string path, 
+        FileMode mode, 
+        FileAccess access, 
+        FileShare share)
+    {
+        FileStream stream;
+        try
+        {
+            stream = new FileStream(
+                path: path,
+                mode: mode,
+                access: access,
+                share: share);
+        }
+        catch(Exception ex)
+        {
+            switch (ex)
+            {
+                case FileNotFoundException:
+                    return ResultFactory.Failure<FileStream>(
+                        FileErrors.NotFound(path));
+
+                default:
+                    throw;
+            }
+
+        }
+
+        return ResultFactory.Success(stream);
     }
 }
