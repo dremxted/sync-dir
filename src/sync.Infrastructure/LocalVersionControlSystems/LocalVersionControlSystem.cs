@@ -33,45 +33,29 @@ public sealed class LocalVersionControlSystem : IVersionControlSystem<FileSystem
                 continue;
             }
 
-            Result<FileStream> sourceStreamResult = 
-                OpenStreamForSource(file.FullName);
-            
-            Result<FileStream> replicaStreamResult = 
-                OpenStreamForReplica(destinationFile.FullName);
+            Result<byte[]> sourceHashResult = 
+                await MD5.HashFileAsync(file);
 
-            if(sourceStreamResult.IsFailure)
+            if(sourceHashResult.IsFailure)
             {
                 yield return ResultFactory.Failure<FileSystemInfo>(
-                    sourceStreamResult.Error);
-
+                    sourceHashResult.Error);
+                
                 continue;
             }
 
-            if(replicaStreamResult.IsFailure)
+            Result<byte[]> replicaHashResult = 
+                await MD5.HashFileAsync(destinationFile);
+
+            if(replicaHashResult.IsFailure)
             {
                 yield return ResultFactory.Failure<FileSystemInfo>(
-                    replicaStreamResult.Error);
-
+                    replicaHashResult.Error);
+                
                 continue;
             }
 
-            byte[] sourceHash;
-            await using(sourceStreamResult.Value)
-            {
-                sourceHash = await MD5.HashDataAsync(
-                    source: sourceStreamResult.Value, 
-                    cancellationToken: cancellationToken);
-            }
-
-            byte[] replicaHash;
-            await using(replicaStreamResult.Value)
-            {
-                replicaHash = await MD5.HashDataAsync(
-                    source: replicaStreamResult.Value, 
-                    cancellationToken: cancellationToken);
-            }
-
-            if(!sourceHash.SequenceEqual(replicaHash))
+            if(!sourceHashResult.Value.SequenceEqual(replicaHashResult.Value))
             {
                 yield return ResultFactory.Success<FileSystemInfo>(file);
             }
@@ -111,49 +95,5 @@ public sealed class LocalVersionControlSystem : IVersionControlSystem<FileSystem
 
             yield return ResultFactory.Success(file);
         }
-    }
-
-    private Result<FileStream> OpenStreamForSource(
-    string fileFullName)
-    {
-        FileStream? stream;
-        try
-        {
-            stream = File.Open(
-                path: fileFullName, 
-                mode: FileMode.Open, 
-                access: FileAccess.Read,
-                share: FileShare.Delete);
-        }
-
-        catch (IOException)
-        {
-            return ResultFactory.Failure<FileStream>(
-                VersionControlErrors.FileAccessDenied(fileFullName));
-        }
-
-        return ResultFactory.Success(stream);
-    }
-
-    private Result<FileStream> OpenStreamForReplica(
-        string fileFullName)
-    {
-        FileStream? stream;
-        try
-        {
-            stream = File.Open(
-                path: fileFullName, 
-                mode: FileMode.Open, 
-                access: FileAccess.Read,
-                share: FileShare.Read);
-        }
-
-        catch (IOException)
-        {
-            return ResultFactory.Failure<FileStream>(
-                VersionControlErrors.FileAccessDenied(fileFullName));
-        }
-
-        return ResultFactory.Success(stream);
     }
 }
