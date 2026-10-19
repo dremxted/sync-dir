@@ -2,6 +2,7 @@
 using System.Security.Cryptography;
 using Shared.Results;
 using sync.Application.VersionControlSystems;
+using sync.Infrastructure.Extensions;
 
 namespace sync.Infrastructure.VersionControlSystems;
 

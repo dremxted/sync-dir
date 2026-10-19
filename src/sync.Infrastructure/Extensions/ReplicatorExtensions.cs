@@ -2,7 +2,7 @@
 using sync.Application.Replicators;
 using sync.Infrastructure.Replicators;
 
-namespace sync.Infrastructure;
+namespace sync.Infrastructure.Extensions;
 
 public static class ReplicatorExtensions
 {

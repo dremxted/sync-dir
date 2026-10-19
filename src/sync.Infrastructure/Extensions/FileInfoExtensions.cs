@@ -2,7 +2,7 @@
 using Shared.Results;
 using sync.Application.Files;
 
-namespace sync.Infrastructure;
+namespace sync.Infrastructure.Extensions;
 
 public static class FileInfoExtensions
 {

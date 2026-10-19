@@ -2,10 +2,9 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using sync.CLI.Contracts;
-using sync.CLI.ReplicateToLocalDirectory;
-using sync.Infrastructure;
+using sync.Infrastructure.Extensions;
 
-namespace sync.CLI;
+namespace sync.CLI.ReplicateToLocalDirectory;
 
 public class ReplicateToLocalDirectoryActionHandler 
     : ICommandActionHandler<ReplicateToLocalDirectoryCommand>

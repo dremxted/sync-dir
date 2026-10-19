@@ -1,4 +1,4 @@
-﻿namespace sync.CLI;
+﻿namespace sync.CLI.ReplicateToLocalDirectory;
 
 public sealed record ReplicateToLocalDirectoryArgumentNames(
     string OriginDirectory,

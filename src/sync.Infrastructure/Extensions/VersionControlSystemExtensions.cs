@@ -2,7 +2,7 @@
 using sync.Application.VersionControlSystems;
 using sync.Infrastructure.VersionControlSystems;
 
-namespace sync.Infrastructure;
+namespace sync.Infrastructure.Extensions;
 
 public static class VersionControlSystemExtensions
 {
