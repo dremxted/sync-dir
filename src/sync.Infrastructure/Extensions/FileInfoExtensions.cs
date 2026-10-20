@@ -54,7 +54,7 @@ public static class FileInfoExtensions
                 if(!sourceFile.Exists)
                 {
                     return ResultFactory.Failure(
-                        FileErrors.NotFound(destinationFile.FullName));
+                        FileErrors.NotFound(sourceFile.FullName));
                 }
             }
 
