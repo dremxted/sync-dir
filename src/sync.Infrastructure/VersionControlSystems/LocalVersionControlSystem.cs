@@ -85,11 +85,14 @@ public sealed class LocalVersionControlSystem : IVersionControlSystem<FileSystem
                 destinationDirectory.FullName, 
                 replicaRelativePath);
 
-            bool destinationFileExists = 
-                File.Exists(replicaPath) 
-                || Directory.Exists(replicaPath);
+            var destinationFileExists = file switch
+            {
+                FileInfo => File.Exists(replicaPath),
+                DirectoryInfo => Directory.Exists(replicaPath),
+                _ => false,
+            };
             
-            if(destinationFileExists)
+            if (destinationFileExists)
             {
                 continue;
             }
