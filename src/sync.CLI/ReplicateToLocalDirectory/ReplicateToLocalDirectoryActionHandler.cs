@@ -29,14 +29,16 @@ public class ReplicateToLocalDirectoryActionHandler
         HostApplicationBuilder builder = Host
             .CreateApplicationBuilder();
 
-        FileInfo logFile = parseResult.GetValue<FileInfo>(_argumentNames.LogOutput)!;
+        FileInfo logFile = parseResult
+            .GetValue<FileInfo>(_argumentNames.LogOutput)!;
 
-        string defaultLogFileName = string.Concat( 
-            DateTime.UtcNow.ToString("yyyy-MM-dd'T'HH.mm.ss.fffffff'Z'"),  
-            "_rep.log");
 
-        if(logFile.Name == string.Empty)
-        { 
+        if(Directory.Exists(logFile.FullName))
+        {
+            string defaultLogFileName = string.Concat( 
+                DateTime.UtcNow.ToString("yyyy-MM-dd'T'HH.mm.ss.fffffff'Z'"),  
+                "_rep.log");
+
             logFile = new FileInfo(Path.Join( 
                 path1: logFile.FullName,  
                 path2: defaultLogFileName)); 
