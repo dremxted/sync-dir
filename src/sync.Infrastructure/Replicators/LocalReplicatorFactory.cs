@@ -42,6 +42,8 @@ public class LocalReplicatorFactory : IReplicatorFactory
             return ResultFactory.Failure<IReplicator>(
                 DirectoryErrors.DoesNotExist(originDirectoryPath));
         };
+
+        replicaDirectoryInfo.Create();
         
         return ResultFactory.Success<IReplicator>(
             new LocalReplicator(
