@@ -64,15 +64,15 @@ public partial class LocalReplicator : IObsoleteItemsCleaner
         {
             Error error = VersionControlErrors.FileAccessDenied(file.FullName);
             
-            _logger.LogInformation(
-                "Unable to delete item due to an error: {error}", 
+            _logger.LogWarning(
+                "Item cannot be deleted due to an error: {error}", 
                 error.Message);
             
             return ResultFactory.Failure<FileSystemInfo>(error);
         }
 
         _logger.LogInformation(
-            "Successfully deleted item at path: {path}", 
+            "Deleted item at path: {path}", 
             file.FullName);
 
         return ResultFactory.Success();
