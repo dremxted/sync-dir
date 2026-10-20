@@ -38,10 +38,25 @@ public class ReplicateToLocalDirectoryCommand : RootCommand
                 return;
             }
 
+            // Loop detection.
             parseResult.PreventArgumentStartWith<DirectoryInfo>(
                 argumentName: argumentNames.ReplicaDirectory,
                 prefix: originDirectory.FullName,
-                errorMessage: "A directory cannot be replicated to itself or its child directories.",
+                errorMessage: "A directory cannot be replicated to itself or its descendant directories.",
+                argumentStringSelector: directoryInfo => directoryInfo.FullName);
+
+            // A directory cannot be replicated to itself or its ancestor directories.
+            // Source fullname cannot start with replica fullname.
+            // Reason:  Once started, content of subfolder is replicated to root,
+            //          meaning that subfolder can no longer exist in root as subfolder does not contain itself (not possible). 
+            //          Thus, it becomes deleted.
+            //          As subfolder no longer exists, its content is nothing.
+            //          Upon subsequent replication, NOTHING is replicated to root,
+            //          meaning all root content becomes deleted!
+            parseResult.PreventArgumentStartWith<DirectoryInfo>(
+                argumentName: argumentNames.OriginDirectory,
+                prefix: replicaDirectory.FullName,
+                errorMessage: "A directory cannot be replicated to itself or its ancestor directories",
                 argumentStringSelector: directoryInfo => directoryInfo.FullName);
 
             parseResult.PreventArgumentStartWith<FileInfo>(
