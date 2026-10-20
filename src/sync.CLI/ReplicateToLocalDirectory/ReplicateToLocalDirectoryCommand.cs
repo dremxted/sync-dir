@@ -56,7 +56,7 @@ public class ReplicateToLocalDirectoryCommand : RootCommand
 
             parseResult.PreventArgumentStartWith<FileInfo>(
                 argumentName: argumentNames.LogOutput,
-                prefix: originDirectory.FullName,
+                prefix: replicaDirectory.FullName,
                 errorMessage: "Log file cannot be created in destination directory of the replicated directory.",
                 argumentStringSelector: fileInfo => fileInfo.FullName);
         });
