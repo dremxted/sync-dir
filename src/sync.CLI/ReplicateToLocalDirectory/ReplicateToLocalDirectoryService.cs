@@ -25,18 +25,22 @@ internal class ReplicateToLocalDirectoryService : BackgroundService
         {
             await _sender.Send(new DeleteObsoleteFilesCommand(
                 _args.OriginDirectoryPath, 
-                _args.DestinationDirectoryPath));
+                _args.DestinationDirectoryPath),
+                cancellationToken);
 
             await _sender.Send(new ReplicateAddedFilesCommand(
                 _args.OriginDirectoryPath, 
-                _args.DestinationDirectoryPath));
+                _args.DestinationDirectoryPath),
+                cancellationToken);
 
             await _sender.Send(new ReplicateModifiedFilesCommand(
                 _args.OriginDirectoryPath, 
-                _args.DestinationDirectoryPath));
+                _args.DestinationDirectoryPath),
+                cancellationToken);
             
             await Task.Delay(TimeSpan.FromSeconds(
-                _args.IntervalSeconds));
+                _args.IntervalSeconds),
+                cancellationToken);
         };
     }
 }
