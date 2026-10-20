@@ -20,10 +20,12 @@ internal static class CommandExtensions
                 ReplicateToLocalDirectoryActionHandler>()
             .AddScoped(GetArgumentNames<ReplicateToLocalDirectoryArgumentNames>);
 
-            configurationBuilder.AddJsonFile(
-                path: $"appsettings.{nameof(ReplicateToLocalDirectoryArgumentNames)}.json", 
-                optional: false, 
-                reloadOnChange: true);
+            configurationBuilder
+                .SetBasePath(AppContext.BaseDirectory)
+                .AddJsonFile(
+                    path: $"appsettings.{nameof(ReplicateToLocalDirectoryArgumentNames)}.json", 
+                    optional: false, 
+                    reloadOnChange: true);
 
         return services;
     }
