@@ -6,6 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PackAsTool>true</PackAsTool> 
+    <AssemblyName>rep</AssemblyName>
     <ToolCommandName>rep</ToolCommandName> 
     <PackageOutputPath>./nupkg</PackageOutputPath> 
   </PropertyGroup>
