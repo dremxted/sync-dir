@@ -22,4 +22,10 @@
     <ProjectReference Include="..\sync.Infrastructure\sync.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="appsettings.ReplicateToLocalDirectoryArgumentNames.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
