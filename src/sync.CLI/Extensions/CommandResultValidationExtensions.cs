@@ -20,8 +20,8 @@ public static class CommandResultValidationExtensions
             return;
         }
 
-        if(argumentStringSelector(valueArgumentType)
-            .StartsWith(prefix))
+        if(argumentStringSelector(valueArgumentType).ToLower()
+            .StartsWith(prefix.ToLower()))
         {
             parseResult.AddError(errorMessage);
         }
