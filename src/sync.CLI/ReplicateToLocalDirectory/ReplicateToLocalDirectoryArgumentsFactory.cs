@@ -49,7 +49,7 @@ public class ReplicateToLocalDirectoryArgumentsFactory
     {
         Argument<double> argument = new(_argumentNames.IntervalSeconds)
         {
-            Description = "How often synchronization occurs in miliseconds."
+            Description = "Interval between synchronization execution in seconds."
         };
 
         // [TODO] Obtain values from JSON
@@ -62,7 +62,7 @@ public class ReplicateToLocalDirectoryArgumentsFactory
     {
         Argument<FileInfo> argument = new(_argumentNames.LogOutput)
         {
-            Description = "File to which logs are persisted."
+            Description = "Path to the file or directory to which logs are persisted."
         };
 
         argument.AcceptLegalFilePathsOnly();
