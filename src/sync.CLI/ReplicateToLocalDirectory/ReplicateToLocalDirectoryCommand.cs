@@ -26,16 +26,12 @@ public class ReplicateToLocalDirectoryCommand : RootCommand
 
             DirectoryInfo? replicaDirectory = parseResult.GetValue<DirectoryInfo>(
                 argumentNames.ReplicaDirectory);
-
-            double? intervalSeconds = parseResult.GetValue<double>(
-                argumentNames.IntervalSeconds);
-
+                
             FileInfo? logFile = parseResult.GetValue<FileInfo>(
                 argumentNames.LogOutput);
 
             if(originDirectory is null
                 || replicaDirectory is null
-                || intervalSeconds is null
                 || logFile is null)
             {
                 parseResult.AddError("Required argument is missing.");
