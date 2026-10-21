@@ -23,18 +23,21 @@ public partial class LocalReplicator : IObsoleteItemsCleaner
             {
                 return file;
             }
+
+            Result deleteFileResult = TryDeleteFile(file.Value);
             
-            if(!file.Value.Exists)
+            if(deleteFileResult.IsFailure)
             {
+                _logger.LogWarning(
+                    "Item cannot be deleted due to an error: {error}", 
+                    deleteFileResult.Error.Message);
+
                 continue;
             }
 
-            Result deleteFileResult = TryDeleteFile(file.Value);
-
-            if(deleteFileResult.IsFailure)
-            {
-                return deleteFileResult;
-            }
+            _logger.LogInformation(
+                "Deleted item at path: {path}", 
+                file.Value.FullName);
         }
 
         return ResultFactory.Success();
@@ -45,8 +48,6 @@ public partial class LocalReplicator : IObsoleteItemsCleaner
         _logger.LogInformation(
             "Deleting item at path: {path}", 
             file.FullName);
-
-        Error exceptionError = Error.None;
         
         try
         {
@@ -68,27 +69,14 @@ public partial class LocalReplicator : IObsoleteItemsCleaner
             switch (ex)
             {
                 case FileNotFoundException:
-                    exceptionError = FileErrors.NotFound(file.FullName);
-                    return ResultFactory.Failure<FileStream>(exceptionError);
+                    return ResultFactory.Failure<FileStream>(
+                        FileErrors.NotFound(file.FullName));
 
                 case IOException:
-                    exceptionError = VersionControlErrors.FileAccessDenied(file.FullName);
-                    return ResultFactory.Failure<FileStream>(exceptionError);
+                    return ResultFactory.Failure<FileStream>(
+                        VersionControlErrors.FileAccessDenied(file.FullName));
             }
         }
-        finally
-        {
-            if(exceptionError != Error.None)
-            {
-                _logger.LogWarning(
-                    "Item cannot be deleted due to an error: {error}", 
-                    exceptionError.Message);
-            }
-        }
-
-        _logger.LogInformation(
-            "Deleted item at path: {path}", 
-            file.FullName);
 
         return ResultFactory.Success();
     }
