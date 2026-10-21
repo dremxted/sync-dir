@@ -95,7 +95,7 @@ public partial class LocalReplicator : IReplicator
         _logger.LogInformation(
             "Replicated {source} at path: {path}",
             source.FullName,
-            Path.Join(_replicaDirectory.FullName,source.Name));
+            Path.Join(info!.FullName));
 
         return ResultFactory.Success(info!);
     }
