@@ -1,4 +1,5 @@
-﻿using System.CommandLine;
+using System.CommandLine;
+using sync.Application.Extensions;
 using sync.CLI.Contracts;
 using sync.CLI.Extensions;
 
@@ -18,7 +19,6 @@ public class ReplicateToLocalDirectoryCommand : RootCommand
             Arguments.Add(arg);
         }
 
-
         Validators.Add(parseResult =>
         {
             DirectoryInfo? originDirectory = parseResult.GetValue<DirectoryInfo>(
@@ -37,13 +37,14 @@ public class ReplicateToLocalDirectoryCommand : RootCommand
                 parseResult.AddError("Required argument is missing.");
                 return;
             }
-
+            
             // Loop detection.
             parseResult.PreventArgumentStartWith<DirectoryInfo>(
                 argumentName: argumentNames.ReplicaDirectory,
-                prefix: originDirectory.FullName,
+                prefix: Path.AddDirectorySeparatorEnding(originDirectory.FullName),
                 errorMessage: "A directory cannot be replicated to itself or its descendant directories.",
-                argumentStringSelector: directoryInfo => directoryInfo.FullName);
+                argumentStringSelector: directoryInfo => 
+                    Path.AddDirectorySeparatorEnding(directoryInfo.FullName));
 
             // A directory cannot be replicated to itself or its ancestor directories.
             // Source fullname cannot start with replica fullname.
@@ -55,9 +56,10 @@ public class ReplicateToLocalDirectoryCommand : RootCommand
             //          meaning all root content becomes deleted!
             parseResult.PreventArgumentStartWith<DirectoryInfo>(
                 argumentName: argumentNames.OriginDirectory,
-                prefix: replicaDirectory.FullName,
+                prefix: Path.AddDirectorySeparatorEnding(replicaDirectory.FullName),
                 errorMessage: "A directory cannot be replicated to itself or its ancestor directories",
-                argumentStringSelector: directoryInfo => directoryInfo.FullName);
+                argumentStringSelector: directoryInfo => 
+                    Path.AddDirectorySeparatorEnding(directoryInfo.FullName));
 
             parseResult.PreventArgumentStartWith<FileInfo>(
                 argumentName: argumentNames.LogOutput,
