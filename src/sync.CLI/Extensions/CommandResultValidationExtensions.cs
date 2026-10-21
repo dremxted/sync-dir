@@ -20,8 +20,19 @@ public static class CommandResultValidationExtensions
             return;
         }
 
-        if(argumentStringSelector(valueArgumentType).ToLower()
-            .StartsWith(prefix.ToLower()))
+        string path = argumentStringSelector(valueArgumentType);
+
+        if(!Path.EndsInDirectorySeparator(path))
+        {
+            path += Path.DirectorySeparatorChar;
+        }
+
+        if(!Path.EndsInDirectorySeparator(prefix))
+        {
+            prefix += Path.DirectorySeparatorChar;
+        }
+
+        if(path.ToLower().StartsWith(prefix.ToLower()))
         {
             parseResult.AddError(errorMessage);
         }
