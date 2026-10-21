@@ -1,7 +1,8 @@
-﻿using System.CommandLine;
+using System.CommandLine;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using sync.Application.Extensions;
 using sync.CLI.Contracts;
 using sync.CLI.Extensions;
 using sync.Infrastructure.Extensions;
@@ -44,9 +45,17 @@ public class ReplicateToLocalDirectoryActionHandler
                 path2: defaultLogFileName)); 
         }
 
+        string normalizedOriginPath = Path.AddDirectorySeparatorEnding(
+            parseResult.GetValue<DirectoryInfo>(
+                _argumentNames.OriginDirectory)!.FullName);
+        
+        string normalizedReplicaPath = Path.AddDirectorySeparatorEnding(
+            parseResult.GetValue<DirectoryInfo>(
+                _argumentNames.ReplicaDirectory)!.FullName);
+
         ReplicateToLocalDirectoryArgs args = new(
-            parseResult.GetValue<DirectoryInfo>(_argumentNames.OriginDirectory)!.FullName,
-            parseResult.GetValue<DirectoryInfo>(_argumentNames.ReplicaDirectory)!.FullName,
+            normalizedOriginPath,
+            normalizedReplicaPath,
             parseResult.GetValue<double>(_argumentNames.IntervalSeconds)!,
             logFile!.FullName);
 
