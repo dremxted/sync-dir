@@ -1,6 +1,7 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using Shared.Results;
 using sync.Application.Files;
+using sync.Application.VersionControlSystems;
 
 namespace sync.Infrastructure.Extensions;
 
@@ -101,7 +102,9 @@ public static class FileInfoExtensions
                 case FileNotFoundException:
                     return ResultFactory.Failure<FileStream>(
                         FileErrors.NotFound(path));
-
+                case IOException:
+                    return ResultFactory.Failure<FileStream>(
+                        VersionControlErrors.FileAccessDenied(path));
                 default:
                     throw;
             }
