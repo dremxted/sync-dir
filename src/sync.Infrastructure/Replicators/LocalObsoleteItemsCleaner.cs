@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Shared.Results;
+using sync.Application.Directories;
 using sync.Application.Files;
 using sync.Application.Replicators;
 using sync.Application.VersionControlSystems;
@@ -72,9 +73,21 @@ public partial class LocalReplicator : IObsoleteItemsCleaner
                     return ResultFactory.Failure<FileStream>(
                         FileErrors.NotFound(file.FullName));
 
+                case DirectoryNotFoundException:
+                    return ResultFactory.Failure<FileStream>(
+                        DirectoryErrors.DoesNotExist(file.FullName));
+
                 case IOException:
                     return ResultFactory.Failure<FileStream>(
                         VersionControlErrors.FileAccessDenied(file.FullName));
+
+                case UnauthorizedAccessException:
+                    return ResultFactory.Failure<FileStream>(
+                        VersionControlErrors.FileAccessDenied(file.FullName));
+                
+                default:
+                    throw;
+
             }
         }
 
