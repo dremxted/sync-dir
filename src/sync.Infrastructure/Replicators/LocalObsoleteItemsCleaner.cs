@@ -1,5 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using Shared.Results;
+using sync.Application.Files;
 using sync.Application.Replicators;
 using sync.Application.VersionControlSystems;
 
@@ -45,6 +46,8 @@ public partial class LocalReplicator : IObsoleteItemsCleaner
             "Deleting item at path: {path}", 
             file.FullName);
 
+        Error exceptionError = Error.None;
+        
         try
         {
             switch (file)
@@ -60,15 +63,27 @@ public partial class LocalReplicator : IObsoleteItemsCleaner
                         break;
             }
         }
-        catch
+        catch(Exception ex)
         {
-            Error error = VersionControlErrors.FileAccessDenied(file.FullName);
-            
-            _logger.LogWarning(
-                "Item cannot be deleted due to an error: {error}", 
-                error.Message);
-            
-            return ResultFactory.Failure<FileSystemInfo>(error);
+            switch (ex)
+            {
+                case FileNotFoundException:
+                    exceptionError = FileErrors.NotFound(file.FullName);
+                    return ResultFactory.Failure<FileStream>(exceptionError);
+
+                case IOException:
+                    exceptionError = VersionControlErrors.FileAccessDenied(file.FullName);
+                    return ResultFactory.Failure<FileStream>(exceptionError);
+            }
+        }
+        finally
+        {
+            if(exceptionError != Error.None)
+            {
+                _logger.LogWarning(
+                    "Item cannot be deleted due to an error: {error}", 
+                    exceptionError.Message);
+            }
         }
 
         _logger.LogInformation(
