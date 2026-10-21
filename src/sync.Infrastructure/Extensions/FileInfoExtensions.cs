@@ -23,8 +23,7 @@ public static class FileInfoExtensions
         
         if(sourceStreamResult.IsFailure)
         {
-            return ResultFactory.Failure(
-                FileErrors.NotFound(sourceFile.FullName));
+            return sourceStreamResult;
         }
 
         await using FileStream sourceStream = sourceStreamResult.Value;
@@ -37,8 +36,7 @@ public static class FileInfoExtensions
 
         if(destinationStreamResult.IsFailure)
         {
-            return ResultFactory.Failure(
-                FileErrors.NotFound(destinationFile.FullName));    
+            return destinationStreamResult;    
         }
 
         await using FileStream destinationStream = destinationStreamResult.Value;
