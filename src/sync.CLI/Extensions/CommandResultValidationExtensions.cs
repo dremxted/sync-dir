@@ -1,40 +1,91 @@
-﻿using System.CommandLine.Parsing;
+﻿using System.CommandLine;
+using System.CommandLine.Parsing;
 
 namespace sync.CLI.Extensions;
 
 public static class CommandResultValidationExtensions
 {
-    public static void PreventArgumentStartWith<TArgumentType>(
-        this CommandResult parseResult, 
-        string argumentName, 
-        string prefix,
-        string errorMessage,
-        Func<TArgumentType,string> argumentStringSelector)
+    public static void CannotStartWith<TValue, TPrefixValue>(
+        this Argument<TValue> argument, 
+        Argument<TPrefixValue> prefix,
+        Func<TValue, string> argumentSelector,
+        Func<TPrefixValue, string> prefixSelector,
+        string errorMessage)
     {
-        TArgumentType? valueArgumentType = parseResult
-            .GetValue<TArgumentType>(argumentName);
-
-        if(valueArgumentType is null)
+        argument.Validators.Add(argumentResult =>
         {
-            parseResult.AddError($"{argumentName} argument cannot be null.");
-            return;
-        }
+            ArgumentResult? prefixResult = argumentResult.GetResult(prefix);
+            
+            if(prefixResult is null
+                || argumentResult.Errors.Any() 
+                || prefixResult.Errors.Any())
+            {
+                return;
+            }
 
-        string path = argumentStringSelector(valueArgumentType);
+            TValue? value = argumentResult
+                .GetValueOrDefault<TValue>();
+            
+            if(value is null)
+            {
+                return;
+            }
 
-        if(!Path.EndsInDirectorySeparator(path))
+            TPrefixValue? prefixValue = argumentResult
+                .GetValue<TPrefixValue>(prefix.Name);
+
+            if(prefixValue is null)
+            {
+                return;
+            }
+
+            if(argumentSelector(value)
+                .StartsWith(prefixSelector(prefixValue)))
+            {
+                argumentResult.AddError(errorMessage);
+                return;
+            }
+
+        });
+    }
+
+    public static void CannotBePrefixOf<TValue, TSuffix>(
+        this Argument<TValue> argument, 
+        Argument<TSuffix> suffix,
+        Func<TValue, string> argumentSelector,
+        Func<TSuffix, string> suffixSelector,
+        string errorMessage)
+    {
+        argument.Validators.Add(argumentResult =>
         {
-            path += Path.DirectorySeparatorChar;
-        }
+            ArgumentResult? suffixResult = argumentResult.GetResult(suffix);
 
-        if(!Path.EndsInDirectorySeparator(prefix))
-        {
-            prefix += Path.DirectorySeparatorChar;
-        }
+            if(suffixResult is null
+                || argumentResult.Errors.Any()
+                || suffixResult.Errors.Any())
+            {
+                return;
+            }
 
-        if(path.ToLower().StartsWith(prefix.ToLower()))
-        {
-            parseResult.AddError(errorMessage);
-        }
+            TValue? argumentValue = argumentResult.GetValueOrDefault<TValue>();
+            
+            if(argumentValue is null)
+            {
+                return;
+            }
+
+            TSuffix? suffixValue = argumentResult.GetValue(suffix);
+
+            if(suffixValue is null)
+            {
+                return;
+            }
+
+            if(suffixSelector(suffixValue).StartsWith(argumentSelector(argumentValue)))
+            {
+                argumentResult.AddError(errorMessage);
+            }
+
+        });
     }
 }
