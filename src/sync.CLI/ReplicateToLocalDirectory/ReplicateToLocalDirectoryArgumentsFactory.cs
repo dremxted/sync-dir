@@ -1,4 +1,5 @@
 ﻿using System.CommandLine;
+using sync.Application.Extensions;
 using sync.CLI.Contracts;
 using sync.CLI.Extensions;
 
@@ -17,13 +18,15 @@ public class ReplicateToLocalDirectoryArgumentsFactory
 
     public IEnumerable<Argument> Create()
     {
-        yield return CreateSourceDirectoryArgument();
-        yield return CreateReplicaDirectoryArgument();
+        Argument<DirectoryInfo> sourceDirectoryArgument = CreateSourceDirectoryArgument();
+        
+        yield return sourceDirectoryArgument;
+        yield return CreateReplicaDirectoryArgument(sourceDirectoryArgument);
         yield return CreateSynchronizationIntervalArgument();
         yield return CreateLogFileArgument();
     }
 
-    private Argument CreateSourceDirectoryArgument()
+    private Argument<DirectoryInfo> CreateSourceDirectoryArgument()
     {
         Argument<DirectoryInfo> argument = new(_argumentNames.OriginDirectory)
         {
@@ -35,17 +38,39 @@ public class ReplicateToLocalDirectoryArgumentsFactory
         return argument;
     }
 
-    private Argument CreateReplicaDirectoryArgument()
+    // Reading an argument's value using GetValue or similar methods before its validators run
+    // causes those validators to be skipped when the parser reaches that argument's validation step:
+    // https://github.com/dotnet/command-line-api/issues/2607
+
+    // To avoid this issue, require origin argument to ensure it is already parsed.
+    // Validate whether origin argument value starts with replica by using
+    // CannotBePrefixOf TO AVOID obtaining replica's value in origin validator (with CannotStartWith)
+    // and passing replica argument which may not be parsed yet.
+    private Argument<DirectoryInfo> CreateReplicaDirectoryArgument(Argument<DirectoryInfo> originArgument)
     {
-        Argument<DirectoryInfo> argument = new(_argumentNames.ReplicaDirectory)
+        Argument<DirectoryInfo> replicaArgument = new(_argumentNames.ReplicaDirectory)
         {
             Description = "Path to the directory TO which content will be replicated."
         };
 
-        return argument;
+        //Ban loops
+        replicaArgument.CannotStartWith(
+            prefix: originArgument, 
+            replicaValue => Path.AddDirectorySeparatorEnding(replicaValue.FullName).ToLower(),
+            originValue => Path.AddDirectorySeparatorEnding(originValue.FullName).ToLower(),
+            "A directory cannot be replicated to itself or its descendant directories.");
+
+        //Ban self-deleting
+        replicaArgument.CannotBePrefixOf(
+            suffix: originArgument,
+            argumentSelector: replicaArgument => Path.AddDirectorySeparatorEnding(replicaArgument.FullName).ToLower(),
+            suffixSelector: originArgument => Path.AddDirectorySeparatorEnding(originArgument.FullName).ToLower(),
+            "A directory cannot be replicated to itself or its ancestor directories.");
+        
+        return replicaArgument;
     }
 
-    private Argument CreateSynchronizationIntervalArgument()
+    private Argument<double> CreateSynchronizationIntervalArgument()
     {
         Argument<double> argument = new(_argumentNames.IntervalSeconds)
         {
@@ -58,7 +83,7 @@ public class ReplicateToLocalDirectoryArgumentsFactory
         return argument;
     }
 
-    private Argument CreateLogFileArgument()
+    private Argument<FileInfo> CreateLogFileArgument()
     {
         Argument<FileInfo> argument = new(_argumentNames.LogOutput)
         {
